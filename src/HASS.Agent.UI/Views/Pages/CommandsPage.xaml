@@ -8,26 +8,46 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Commands" Style="{StaticResource TitleTextBlockStyle}" Margin="24,24,24,16"/>
+        <StackPanel Grid.Row="0" Margin="24,24,24,12" Spacing="12">
+            <TextBlock Text="Commands" Style="{StaticResource TitleTextBlockStyle}"/>
+            <CommandBar DefaultLabelPosition="Right" HorizontalAlignment="Left">
+                <AppBarButton Icon="Add"    Label="Add"    Click="OnAdd"/>
+                <AppBarButton x:Name="DeleteButton" Icon="Delete" Label="Delete"
+                              IsEnabled="False" Click="OnDelete"/>
+            </CommandBar>
+        </StackPanel>
 
         <ListView
             Grid.Row="1"
             x:Name="CommandsList"
-            Margin="24,0,24,24">
+            Margin="24,0,24,0"
+            SelectionChanged="OnSelectionChanged">
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <Grid ColumnSpacing="12" Padding="8,6">
+                    <Grid ColumnSpacing="12" Padding="8,8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="SemiBold"/>
-                        <TextBlock Grid.Column="1" Text="{Binding EntityType}" Opacity="0.6"/>
+                        <StackPanel Grid.Column="0" Spacing="2">
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding GetType.Name}" Opacity="0.6" FontSize="12"/>
+                        </StackPanel>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding EntityType}"
+                                   Opacity="0.6" VerticalAlignment="Center"/>
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
+
+        <TextBlock Grid.Row="2"
+                   x:Name="CountText"
+                   Margin="24,8,24,16"
+                   Opacity="0.6"
+                   FontSize="12"/>
     </Grid>
 </Page>

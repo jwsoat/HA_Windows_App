@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="HASS.Agent.UI.Views.Pages.EntityDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Add"
+    PrimaryButtonText="Save"
+    CloseButtonText="Cancel"
+    DefaultButton="Primary"
+    MinWidth="540">
+
+    <Grid Width="500">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Step 1: Type picker -->
+        <StackPanel x:Name="StepTypePicker" Grid.Row="0" Spacing="12" Margin="0,0,0,12">
+            <TextBlock Text="Pick a type" Style="{StaticResource SubtitleTextBlockStyle}"/>
+            <AutoSuggestBox x:Name="TypeFilterBox"
+                            PlaceholderText="Filter types"
+                            TextChanged="OnFilterChanged"
+                            QueryIcon="Find"/>
+            <ListView x:Name="TypeList"
+                      MaxHeight="320"
+                      SelectionMode="Single"
+                      SelectionChanged="OnTypeSelected"
+                      Padding="0">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Spacing="2" Padding="4,6">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Border CornerRadius="4"
+                                        Padding="6,1"
+                                        Background="{ThemeResource AccentFillColorTertiaryBrush}">
+                                    <TextBlock Text="{Binding Category}" FontSize="11"/>
+                                </Border>
+                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding Description}" Opacity="0.6" FontSize="12" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackPanel>
+
+        <!-- Step 2: Edit form -->
+        <ScrollViewer x:Name="StepEditForm" Grid.Row="1" Visibility="Collapsed">
+            <StackPanel Spacing="12">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="← Back" Click="OnBackToPicker"/>
+                    <TextBlock x:Name="SelectedTypeLabel"
+                               VerticalAlignment="Center"
+                               Style="{StaticResource SubtitleTextBlockStyle}"/>
+                </StackPanel>
+
+                <TextBox x:Name="NameBox" Header="Name" PlaceholderText="e.g. living_room_cpu"/>
+
+                <NumberBox x:Name="IntervalBox" Header="Update Interval (seconds)"
+                           SpinButtonPlacementMode="Compact"
+                           Minimum="1" Maximum="43200" Value="30"/>
+
+                <ComboBox x:Name="EntityTypeCombo" Header="Entity type (commands only)"
+                          HorizontalAlignment="Stretch" Visibility="Collapsed"/>
+
+                <!-- Dynamic fields injected here -->
+                <StackPanel x:Name="DynamicFieldsHost" Spacing="12"/>
+
+                <InfoBar x:Name="ErrorBar" IsOpen="False" IsClosable="True" Severity="Error"/>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</ContentDialog>
