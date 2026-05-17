@@ -24,6 +24,11 @@ public partial class App : Application
     {
         InitializeComponent();
         ConfigureLogging();
+        UnhandledException += (_, e) =>
+        {
+            Log.Fatal(e.Exception, "[APP] Unhandled exception: {err}", e.Exception?.Message);
+            e.Handled = true;
+        };
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
@@ -61,6 +66,9 @@ public partial class App : Application
 
             var state = Services.GetRequiredService<IApplicationStateService>();
             Log.Information("[APP] Starting HASS.Agent {device}", state.AppSettings.DeviceName);
+
+            // Notify MainWindow that settings are loaded — triggers tray icon + hotkey registration
+            WeakReferenceMessenger.Default.Send(new SettingsChangedMessage());
 
             var mqtt = Services.GetRequiredService<IMqttService>();
             await mqtt.InitializeAsync();

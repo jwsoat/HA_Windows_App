@@ -8,4 +8,40 @@
   <Target Name="CopyLocalFilesOutputGroup" Returns="@(CopyLocalFilesOutputGroupOutput)" />
   <Target Name="_GetDefaultResourceLanguage" />
   <Target Name="_GetPackageArchitecture" />
+
+  <!--
+    Generate the app's resources.pri directly via makepri.exe.
+    Without this, WinUI 3 can't resolve ms-appx:/// URIs at runtime
+    (themeresources.xaml fails to load and the app crashes silently in OnLaunched).
+    The VS-supplied MRT MSBuild tasks normally do this, but they're not available in CLI-only builds.
+  -->
+  <Target Name="GenerateAppPri" AfterTargets="Build"
+          Condition="'$(MSBuildProjectName)' == 'HASS.Agent.UI'">
+    <PropertyGroup>
+      <_MakePriExe>$(NuGetPackageRoot)microsoft.windows.sdk.buildtools\10.0.26100.1742\bin\10.0.26100.0\x64\makepri.exe</_MakePriExe>
+      <_PriOutDir>$(MSBuildProjectDirectory)\$(OutputPath.TrimEnd('\'))</_PriOutDir>
+      <_PriConfig>$(MSBuildProjectDirectory)\$(IntermediateOutputPath)priconfig.xml</_PriConfig>
+      <_PriStaging>$(MSBuildProjectDirectory)\$(IntermediateOutputPath)pri-staging</_PriStaging>
+    </PropertyGroup>
+
+    <!-- Step 1: Generate a canonical priconfig.xml via makepri createconfig. -->
+    <Exec Command="&quot;$(_MakePriExe)&quot; createconfig /cf &quot;$(_PriConfig)&quot; /dq en-US /pv 10.0.0 /o"
+          ConsoleToMSBuild="true" />
+
+    <!-- Step 2: Set up staging dir with ONLY the library PRIs (no asset folders), so makepri can reference them without seeing duplicate assets. -->
+    <RemoveDir Directories="$(_PriStaging)" />
+    <MakeDir Directories="$(_PriStaging)" />
+    <ItemGroup>
+      <_LibraryPris Include="$(_PriOutDir)\Microsoft.UI.pri" />
+      <_LibraryPris Include="$(_PriOutDir)\Microsoft.UI.Xaml.Controls.pri" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_LibraryPris)" DestinationFolder="$(_PriStaging)" SkipUnchangedFiles="true" />
+
+    <!-- Step 3: Generate resources.pri in the staging dir. With only the library PRIs present (no unpacked asset folders), the PRI indexer pulls them in without conflict. -->
+    <Exec Command="&quot;$(_MakePriExe)&quot; new /pr &quot;$(_PriStaging)&quot; /cf &quot;$(_PriConfig)&quot; /of &quot;$(_PriStaging)\resources.pri&quot; /o"
+          ConsoleToMSBuild="true" />
+
+    <!-- Step 4: Copy the generated PRI into the bin output. -->
+    <Copy SourceFiles="$(_PriStaging)\resources.pri" DestinationFolder="$(_PriOutDir)" />
+  </Target>
 </Project>

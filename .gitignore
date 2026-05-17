@@ -8,3 +8,9 @@ HASSAgent/obj/
 src/HASS.Agent/bin
 
 src/HASS.Agent/obj
+
+src/HASS.Agent.Core/bin/
+src/HASS.Agent.Core/obj/
+
+src/HASS.Agent.UI/bin/
+src/HASS.Agent.UI/obj/

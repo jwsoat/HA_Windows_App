@@ -60,7 +60,7 @@ namespace HASS.Agent.Core.Models.Config
         public bool QuickActionsHotKeyEnabled { get; set; } = true;
         public string QuickActionsHotKey { get; set; } = string.Empty;
 
-        public bool MqttEnabled { get; set; } = true;
+        public bool MqttEnabled { get; set; } = false;
         public string MqttAddress { get; set; } = "homeassistant.local";
         public int MqttPort { get; set; } = 1883;
         public bool MqttUseTls { get; set; }
