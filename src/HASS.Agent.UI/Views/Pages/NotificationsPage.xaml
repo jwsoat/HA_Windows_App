@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="HASS.Agent.UI.Views.Pages.NotificationsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ScrollViewer>
+        <StackPanel Spacing="16" Margin="24" MaxWidth="600" HorizontalAlignment="Left">
+
+            <TextBlock Text="Notifications" Style="{StaticResource TitleTextBlockStyle}"/>
+
+            <InfoBar
+                IsOpen="True"
+                IsClosable="False"
+                Severity="Informational"
+                Title="How it works"
+                Message="HASS.Agent subscribes to the MQTT topic hass.agent/notifications/{device-name} and shows Windows toast notifications for messages received."/>
+
+            <ToggleSwitch x:Name="EnabledToggle" Header="Enable Notifications"/>
+
+            <Button Content="Send Test Notification" Click="OnSendTest"/>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

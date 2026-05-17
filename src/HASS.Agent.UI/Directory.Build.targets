@@ -1,0 +1,11 @@
+<Project>
+  <!--
+    Suppress Windows App SDK packaging targets that require VS workloads not present in CLI-only builds.
+    These are no-ops for non-MSIX (WindowsPackageType=None) development builds.
+    Safe to remove this file when Visual Studio with MSIX packaging tools is installed.
+  -->
+  <Target Name="GetMrtPackagingOutputs" Returns="@(PackagingOutputs)" />
+  <Target Name="CopyLocalFilesOutputGroup" Returns="@(CopyLocalFilesOutputGroupOutput)" />
+  <Target Name="_GetDefaultResourceLanguage" />
+  <Target Name="_GetPackageArchitecture" />
+</Project>

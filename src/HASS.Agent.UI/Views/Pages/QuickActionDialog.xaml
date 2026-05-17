@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="HASS.Agent.UI.Views.Pages.QuickActionDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Quick Action"
+    PrimaryButtonText="Save"
+    CloseButtonText="Cancel"
+    DefaultButton="Primary"
+    MinWidth="480">
+
+    <ScrollViewer>
+        <StackPanel Spacing="12" Width="440">
+
+            <!-- Description -->
+            <TextBox x:Name="DescriptionBox" Header="Description / Label" PlaceholderText="e.g. Living Room Light"/>
+
+            <!-- Entity -->
+            <ComboBox x:Name="EntityCombo" Header="Entity" HorizontalAlignment="Stretch"
+                      IsEditable="True" PlaceholderText="Select or type entity ID"/>
+
+            <!-- Domain -->
+            <ComboBox x:Name="DomainCombo" Header="Domain" HorizontalAlignment="Stretch"/>
+
+            <!-- Action -->
+            <ComboBox x:Name="ActionCombo" Header="Action" HorizontalAlignment="Stretch"/>
+
+            <!-- Group -->
+            <TextBox x:Name="GroupBox" Header="Group / Room" PlaceholderText="e.g. Living Room (optional)"/>
+
+            <!-- Options row -->
+            <StackPanel Orientation="Horizontal" Spacing="24">
+                <ToggleSwitch x:Name="EnabledToggle" Header="Enabled" IsOn="True" MinWidth="0"/>
+                <ToggleSwitch x:Name="ShowStateToggle" Header="Show Entity State" MinWidth="0"/>
+            </StackPanel>
+
+            <!-- Hotkey -->
+            <TextBox x:Name="HotkeyBox" Header="Personal Hotkey" PlaceholderText="e.g. Ctrl+Alt+1 (optional)"/>
+
+            <ToggleSwitch x:Name="HotkeyEnabledToggle" Header="Enable Hotkey" MinWidth="0"/>
+
+            <!-- Sequence section -->
+            <Expander Header="Multi-step Sequence" HorizontalAlignment="Stretch">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Steps execute in order. Add a delay (ms) between steps if needed."
+                               Opacity="0.7" FontSize="12" TextWrapping="Wrap"/>
+
+                    <ListView x:Name="SequenceList" MinHeight="60">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Entity}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding DelayAfterMs}" Opacity="0.6" VerticalAlignment="Center"/>
+                                    <Button Grid.Column="2" Content="✕" Tag="{Binding}" Click="OnRemoveStep"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <Button Content="+ Add Step" Click="OnAddStep"/>
+                </StackPanel>
+            </Expander>
+
+        </StackPanel>
+    </ScrollViewer>
+</ContentDialog>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="HASS.Agent.UI.Views.Pages.AboutPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ScrollViewer>
+        <StackPanel Spacing="16" Margin="24" HorizontalAlignment="Left">
+
+            <TextBlock Text="About" Style="{StaticResource TitleTextBlockStyle}"/>
+
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1" CornerRadius="8" Padding="24"
+                MaxWidth="480">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="HASS.Agent" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                    <TextBlock x:Name="VersionText" Opacity="0.7"/>
+                    <TextBlock Text="Windows client for Home Assistant" Opacity="0.7"/>
+                    <TextBlock Text="© LAB02 Research — MIT License" Opacity="0.5" FontSize="12" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <HyperlinkButton Content="GitHub" NavigateUri="https://github.com/LAB02-Research/HASS.Agent"/>
+                <HyperlinkButton Content="Documentation" NavigateUri="https://hassagent.readthedocs.io"/>
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>
