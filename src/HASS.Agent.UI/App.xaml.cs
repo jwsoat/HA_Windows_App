@@ -4,6 +4,8 @@ using HASS.Agent.Core.HomeAssistant;
 using HASS.Agent.Core.Hotkeys;
 using HASS.Agent.Core.Mqtt;
 using HASS.Agent.Core.Services;
+using HASS.Agent.Shared;
+using HASS.Agent.Shared.Mqtt;
 using HASS.Agent.UI.Services;
 using HASS.Agent.UI.ViewModels;
 using HASS.Agent.UI.Views;
@@ -70,6 +72,12 @@ public partial class App : Application
                 state.AppSettings.DeviceName,
                 state.QuickActions.Count, state.Commands.Count,
                 state.SingleValueSensors.Count, state.MultiValueSensors.Count);
+
+            // Wire the MqttService into HASS.Agent.Shared's static singleton so the concrete
+            // sensor/command classes can publish through us via Variables.MqttManager.
+            var mqttMgr = (IMqttManager)Services.GetRequiredService<IMqttService>();
+            AgentSharedBase.Initialize(state.AppSettings.DeviceName, mqttMgr,
+                state.AppSettings.CustomExecutorBinary ?? string.Empty);
 
             // Notify MainWindow that settings are loaded — triggers tray icon + hotkey registration
             WeakReferenceMessenger.Default.Send(new SettingsChangedMessage());

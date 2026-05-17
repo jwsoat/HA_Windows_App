@@ -2,7 +2,10 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using CommunityToolkit.Mvvm.Messaging;
 using HASS.Agent.Core.Services;
+using HASS.Agent.Shared.Enums;
+using HASS.Agent.Shared.HomeAssistant.Commands;
 using HASS.Agent.Shared.Models.HomeAssistant;
+using HASS.Agent.Shared.Mqtt;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
@@ -15,8 +18,10 @@ namespace HASS.Agent.Core.Mqtt
     /// <summary>
     /// MQTT connectivity — MQTTnet v4, state machine, credential vault, HA autodiscovery.
     /// Replaces the original MqttManager with a fully injectable, UI-free service.
+    /// Also implements <see cref="IMqttManager"/> so the HASS.Agent.Shared sensor and command
+    /// classes (which call Variables.MqttManager statically) can publish through us.
     /// </summary>
-    public class MqttService : IMqttService, IDisposable
+    public class MqttService : IMqttService, IMqttManager, IDisposable
     {
         private readonly IApplicationStateService _state;
         private readonly MqttCredentialVault _vault;
@@ -160,15 +165,31 @@ namespace HASS.Agent.Core.Mqtt
             await PublishAsync(msg);
         }
 
-        public async Task AnnounceAutoDiscoveryAsync(AbstractDiscoverable discoverable, string domain)
+        public Task AnnounceAutoDiscoveryAsync(AbstractDiscoverable discoverable, string domain) =>
+            AnnounceAutoDiscoveryAsync(discoverable, domain, clearConfig: false, migration: false);
+
+        public async Task AnnounceAutoDiscoveryAsync(AbstractDiscoverable discoverable, string domain,
+            bool clearConfig, bool migration)
         {
             try
             {
                 var deviceName = _state.DeviceConfig?.Name ?? _state.AppSettings.DeviceName;
                 var topic = $"{_state.AppSettings.MqttDiscoveryPrefix}/{domain}/{deviceName}/{discoverable.ObjectId}/config";
 
-                var configObj = discoverable.GetAutoDiscoveryConfig();
-                var payload = System.Text.Json.JsonSerializer.Serialize(configObj, configObj.GetType());
+                byte[] payload;
+                if (clearConfig)
+                {
+                    // Empty payload removes the entity from HA (or signals a migration when paired with the migrate flag).
+                    payload = migration
+                        ? System.Text.Encoding.UTF8.GetBytes("{\"migrate_discovery\": true }")
+                        : Array.Empty<byte>();
+                }
+                else
+                {
+                    var configObj = discoverable.GetAutoDiscoveryConfig();
+                    var json = System.Text.Json.JsonSerializer.Serialize(configObj, configObj.GetType());
+                    payload = System.Text.Encoding.UTF8.GetBytes(json);
+                }
 
                 var msg = new MqttApplicationMessageBuilder()
                     .WithTopic(topic)
@@ -177,12 +198,113 @@ namespace HASS.Agent.Core.Mqtt
                     .Build();
 
                 await PublishAsync(msg);
-                EntityDiscovered?.Invoke(this, (discoverable.ObjectId, domain));
+                if (!clearConfig)
+                    EntityDiscovered?.Invoke(this, (discoverable.ObjectId, domain));
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "[MQTT] AutoDiscovery error for {name}: {err}", discoverable.Name, ex.Message);
             }
+        }
+
+        // ── Republish all autodiscovery configs after (re)connect ────────────────
+
+        private async Task RepublishAllDiscoveryAsync()
+        {
+            try
+            {
+                foreach (var sv in _state.SingleValueSensors.ToList())
+                    await AnnounceAutoDiscoveryAsync(sv, "sensor");
+
+                foreach (var mv in _state.MultiValueSensors.ToList())
+                    await AnnounceAutoDiscoveryAsync(mv, "sensor");
+
+                foreach (var cmd in _state.Commands.ToList())
+                {
+                    // Commands map to several HA domains depending on EntityType
+                    var domain = cmd.EntityType switch
+                    {
+                        Shared.Enums.CommandEntityType.Switch => "switch",
+                        Shared.Enums.CommandEntityType.Lock   => "lock",
+                        Shared.Enums.CommandEntityType.Light  => "light",
+                        _                                     => "button"
+                    };
+                    await AnnounceAutoDiscoveryAsync(cmd, domain);
+                    await SubscribeAsync(cmd);
+                }
+
+                Log.Information("[MQTT] Republished discovery for {sv}+{mv} sensors and {cmd} commands",
+                    _state.SingleValueSensors.Count, _state.MultiValueSensors.Count, _state.Commands.Count);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "[MQTT] Republish discovery failed: {err}", ex.Message);
+            }
+        }
+
+        // ── IMqttManager (bridge for HASS.Agent.Shared sensor/command classes) ────
+        // These map our async/state-machine API onto the surface that Variables.MqttManager
+        // expects, so concrete sensors/commands can publish autodiscovery + state through us.
+
+        bool IMqttManager.IsConnected() => _client?.IsConnected ?? false;
+        bool IMqttManager.IsReady() => _client?.IsConnected ?? false;
+        void IMqttManager.Initialize() => _ = Task.Run(InitializeAsync);
+        void IMqttManager.ReloadConfiguration() => _ = Task.Run(ReloadConfigurationAsync);
+        void IMqttManager.Disconnect() => _ = Task.Run(DisconnectAsync);
+
+        bool IMqttManager.UseRetainFlag() => _state.AppSettings.MqttUseRetainFlag;
+        string IMqttManager.MqttDiscoveryPrefix() => _state.AppSettings.MqttDiscoveryPrefix;
+
+        MqttStatus IMqttManager.GetStatus() => ConnectionState switch
+        {
+            MqttConnectionState.NotConfigured => MqttStatus.ConfigMissing,
+            MqttConnectionState.Connected     => MqttStatus.Connected,
+            MqttConnectionState.Connecting    => MqttStatus.Connecting,
+            MqttConnectionState.Reconnecting  => MqttStatus.Connecting,
+            MqttConnectionState.Disconnected  => MqttStatus.Disconnected,
+            MqttConnectionState.Error         => MqttStatus.Error,
+            _                                 => MqttStatus.Disconnected
+        };
+
+        DeviceConfigModel IMqttManager.GetDeviceConfigModel() => _state.DeviceConfig ?? CreateDeviceConfigModelInternal();
+
+        void IMqttManager.CreateDeviceConfigModel()
+        {
+            _state.DeviceConfig = CreateDeviceConfigModelInternal();
+        }
+
+        Task<bool> IMqttManager.PublishAsync(MqttApplicationMessage message) =>
+            PublishWithResultAsync(message);
+
+        Task IMqttManager.AnnounceAutoDiscoveryConfigAsync(AbstractDiscoverable discoverable, string domain,
+            bool clearConfig = false, bool migration = false)
+            => AnnounceAutoDiscoveryAsync(discoverable, domain, clearConfig, migration);
+
+        Task IMqttManager.AnnounceAvailabilityAsync(bool offline = false) => AnnounceAvailabilityAsync(!offline);
+
+        Task IMqttManager.ClearDeviceConfigAsync() => Task.CompletedTask;
+        Task IMqttManager.SubscribeAsync(AbstractCommand command) => SubscribeAsync(command);
+        Task IMqttManager.UnsubscribeAsync(AbstractCommand command) => UnsubscribeAsync(command);
+        Task IMqttManager.SubscribeNotificationsAsync() => SubscribeNotificationsAsync();
+        Task IMqttManager.SubscribeMediaCommandsAsync() => SubscribeMediaCommandsAsync();
+
+        private async Task<bool> PublishWithResultAsync(MqttApplicationMessage msg)
+        {
+            try { await PublishAsync(msg); return _client?.IsConnected ?? false; }
+            catch { return false; }
+        }
+
+        private DeviceConfigModel CreateDeviceConfigModelInternal()
+        {
+            var deviceName = _state.AppSettings.DeviceName;
+            return new DeviceConfigModel
+            {
+                Name = deviceName,
+                Identifiers = $"hass.agent-{deviceName}",
+                Manufacturer = "LAB02 Research",
+                Model = "HASS.Agent",
+                Sw_version = typeof(MqttService).Assembly.GetName().Version?.ToString() ?? "unknown"
+            };
         }
 
         // ── Private connection logic ──────────────────────────────────────────
@@ -206,6 +328,9 @@ namespace HASS.Agent.Core.Mqtt
                     // from Home Assistant can reach Windows.
                     await SubscribeNotificationsAsync();
                     await SubscribeMediaCommandsAsync();
+                    // Republish all sensor/command autodiscovery configs after every (re)connect so HA
+                    // doesn't lose them when the broker bounces. Mirrors hass-agent/HASS.Agent PR #230.
+                    await RepublishAllDiscoveryAsync();
                 };
 
                 _client.DisconnectedAsync += async e =>
