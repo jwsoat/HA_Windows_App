@@ -1,8 +1,10 @@
 using CommunityToolkit.Mvvm.Messaging;
+using HASS.Agent.Core.Commands;
 using HASS.Agent.Core.Configuration;
 using HASS.Agent.Core.HomeAssistant;
 using HASS.Agent.Core.Hotkeys;
 using HASS.Agent.Core.Mqtt;
+using HASS.Agent.Core.Sensors;
 using HASS.Agent.Core.Services;
 using HASS.Agent.Shared;
 using HASS.Agent.Shared.Mqtt;
@@ -43,6 +45,8 @@ public partial class App : Application
             .AddSingleton<MqttCredentialVault>()
             .AddSingleton<IMqttService, MqttService>()
             .AddSingleton<IHassApiService, HassApiService>()
+            .AddSingleton<SensorsWorker>()
+            .AddSingleton<CommandsWorker>()
             .AddSingleton<IGlobalHotkeyService, GlobalHotkeyService>()
             .AddSingleton<TrayIconService>()
             .AddSingleton<NavigationService>()
@@ -87,6 +91,10 @@ public partial class App : Application
 
             var hass = Services.GetRequiredService<IHassApiService>();
             await hass.InitializeAsync();
+
+            // Kick off the sensor + command publish loops.
+            Services.GetRequiredService<SensorsWorker>().Start();
+            Services.GetRequiredService<CommandsWorker>().Start();
 
             Log.Information("[APP] Core services initialized");
         }
