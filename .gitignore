@@ -14,3 +14,6 @@ src/HASS.Agent.Core/obj/
 
 src/HASS.Agent.UI/bin/
 src/HASS.Agent.UI/obj/
+
+src/HASS.Agent.Shared/bin/
+src/HASS.Agent.Shared/obj/
