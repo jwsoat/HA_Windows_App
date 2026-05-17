@@ -1,16 +1,4 @@
 
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/LAB02-Research/HASS.Agent)](https://github.com/LAB02-Research/HASS.Agent/releases/)
-[![license](https://img.shields.io/badge/license-MIT-blue)](#license)
-[![OS - Windows](https://img.shields.io/badge/OS-Windows-blue?logo=windows&logoColor=white)](https://www.microsoft.com/ "Go to Microsoft homepage")
-[![dotnet](https://img.shields.io/badge/.NET-6.0-blue)](https://img.shields.io/badge/.NET-6.0-blue)
-![GitHub all releases](https://img.shields.io/github/downloads/LAB02-Research/HASS.Agent/total?color=blue)
-![GitHub latest](https://img.shields.io/github/downloads/LAB02-Research/HASS.Agent/latest/total?color=blue)
-[![Discord](https://img.shields.io/badge/dynamic/json?color=blue&label=Discord&logo=discord&logoColor=white&query=presence_count&suffix=%20Online&url=https://discordapp.com/api/guilds/932957721622360074/widget.json)](https://discord.gg/nMvqzwrVBU)
-[![Documentation Status](https://readthedocs.org/projects/hassagent/badge/?version=latest)](https://hassagent.readthedocs.io/en/latest/?badge=latest)
-
-<a href="https://github.com/LAB02-Research/HASS.Agent/">
-    <img src="https://raw.githubusercontent.com/LAB02-Research/HASS.Agent/main/images/logo_128.png" alt="HASS.Agent logo" title="HASS.Agent" align="right" height="128" /></a>
-
 # HASS.Agent
 
 HASS.Agent is a Windows-based client (*companion*) application for [Home Assistant](https://www.home-assistant.io), developed in .NET 6.
@@ -18,25 +6,13 @@ HASS.Agent is a Windows-based client (*companion*) application for [Home Assista
 Click [here](https://github.com/LAB02-Research/HASS.Agent/releases/latest/download/HASS.Agent.Installer.exe) to download the latest installer.
 
 ----
-
-### C# or Python developer? Please read this: [lab02-research.org/2023-04-01-help-wanted](https://lab02-research.org/2023-04-01-help-wanted/)
-
-### HASS.Agent is in need of your help! :heart:
-
 ----
 
-Agora o HASS.Agent está em português do Brasil para brasileiros e usuários de língua portuguesa!
-
-Clique [aqui](https://github.com/LAB02-Research/HASS.Agent/releases/tag/b2022.4.2) para baixar o instalador mais recente com a tradução! Obrigado [@LeandroIssa](https://github.com/LeandroIssa) :)
 
 ----
 
 HASS.Agent is **completely free**, and will always stay that way without restrictions. 
 
-However, developing and maintaining this tool (and everything that surrounds it) takes up a lot of time. Like most developers, I run on caffeïne - so a cup of coffee is always very much appreciated! 
-
-| [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/lab02research) |  [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/lab02research) | [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.paypal.com/donate/?hosted_button_id=5YL6UP94AQSPC) |
-|:---:|---|---|
 
 ----
 
@@ -55,21 +31,6 @@ However, developing and maintaining this tool (and everything that surrounds it)
  * [Wishlist](#wishlist)
  * [Credits and Licensing](#credits-and-licensing)
  * [Legacy](#legacy)
-
-----
-
-### Sponsors
-
-I'd like to thank everyone that's been [donating](https://www.buymeacoffee.com/lab02research)! It's not always easy to pick up work for HASS.Agent (next to a full time job), but people taking the time to donate really motivates a lot. It says that you enjoy the work I've been putting in, and makes the trouble worthwhile :)
-
-A big big thank you to the [monthly sponsors](https://github.com/sponsors/LAB02-Admin), you absolutely rock :heart:
-
-<a href="https://github.com/jdiegmueller/"><img src="https://github.com/jdiegmueller.png" width="60" height="60"></a>
-<a href="https://github.com/ewonais/"><img src="https://github.com/ewonais.png" width="60" height="60"></a>
-<a href="https://github.com/thornzero/"><img src="https://github.com/thornzero.png" width="60" height="60"></a>
-<a href="https://github.com/dannytsang/"><img src="https://github.com/dannytsang.png" width="60" height="60"></a>
-
-----
 
 ### Why?
 
