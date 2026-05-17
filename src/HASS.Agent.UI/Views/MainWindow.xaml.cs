@@ -86,6 +86,19 @@ public sealed partial class MainWindow : Window
             });
         });
 
+        // Exit app from tray. Application.Exit() terminates the whole process
+        // (closes any open Shell/Overlay windows along with MainWindow).
+        WeakReferenceMessenger.Default.Register<ExitAppMessage>(this, (_, _) =>
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                _state.ShuttingDown = true;
+                _trayService.RemoveTrayIcon();
+                _hotkeyService.UnregisterAll(Hwnd);
+                Application.Current.Exit();
+            });
+        });
+
         this.Closed += OnClosed;
     }
 

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
+using HASS.Agent.Core.HomeAssistant;
 using HASS.Agent.Core.Mqtt;
 using HASS.Agent.Core.Services;
 using HASS.Agent.UI.Views;
@@ -12,10 +13,14 @@ namespace HASS.Agent.UI.Views.Pages;
 public sealed partial class DashboardPage : Page
 {
     private readonly IApplicationStateService _state;
+    private readonly IMqttService _mqtt;
+    private readonly IHassApiService _hassApi;
 
     public DashboardPage()
     {
-        _state = App.Services.GetRequiredService<IApplicationStateService>();
+        _state   = App.Services.GetRequiredService<IApplicationStateService>();
+        _mqtt    = App.Services.GetRequiredService<IMqttService>();
+        _hassApi = App.Services.GetRequiredService<IHassApiService>();
         InitializeComponent();
     }
 
@@ -38,6 +43,19 @@ public sealed partial class DashboardPage : Page
     {
         QuickActionsCountText.Text =
             $"{_state.QuickActions.Count} action{(_state.QuickActions.Count == 1 ? "" : "s")} configured";
+
+        // Reflect current MQTT + HA API state on every navigation
+        UpdateMqttStatus(_mqtt.ConnectionState);
+        UpdateHassApiStatus();
+    }
+
+    private void UpdateHassApiStatus()
+    {
+        var connected = !string.IsNullOrWhiteSpace(_hassApi.HaVersion);
+        HassApiInfoBar.Severity = connected ? InfoBarSeverity.Success : InfoBarSeverity.Warning;
+        HassApiInfoBar.Message = connected
+            ? $"Connected — Home Assistant {_hassApi.HaVersion}"
+            : "Not connected — open the HA API page to configure";
     }
 
     private void UpdateMqttStatus(MqttConnectionState state)
@@ -49,7 +67,16 @@ public sealed partial class DashboardPage : Page
             MqttConnectionState.Reconnecting => InfoBarSeverity.Warning,
             _                                => InfoBarSeverity.Informational
         };
-        MqttInfoBar.Message = state.ToString();
+        MqttInfoBar.Message = state switch
+        {
+            MqttConnectionState.NotConfigured => "Not configured — open the MQTT page to enable",
+            MqttConnectionState.Disconnected  => "Disconnected",
+            MqttConnectionState.Connecting    => "Connecting...",
+            MqttConnectionState.Connected     => "Connected",
+            MqttConnectionState.Reconnecting  => "Reconnecting...",
+            MqttConnectionState.Error         => "Connection error",
+            _                                 => state.ToString()
+        };
     }
 
     private void OnOpenOverlay(object sender, RoutedEventArgs e)

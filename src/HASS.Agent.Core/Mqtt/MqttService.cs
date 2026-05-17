@@ -202,7 +202,10 @@ namespace HASS.Agent.Core.Mqtt
                     ConnectionState = MqttConnectionState.Connected;
                     Log.Information("[MQTT] Connected to {host}:{port}", settings.MqttAddress, settings.MqttPort);
                     await AnnounceAvailabilityAsync(true);
-                    await Task.CompletedTask;
+                    // Subscribe to the HA-Integration's command topics so notifications and media control
+                    // from Home Assistant can reach Windows.
+                    await SubscribeNotificationsAsync();
+                    await SubscribeMediaCommandsAsync();
                 };
 
                 _client.DisconnectedAsync += async e =>

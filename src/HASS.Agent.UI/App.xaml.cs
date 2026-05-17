@@ -63,9 +63,13 @@ public partial class App : Application
         {
             var settings = Services.GetRequiredService<ISettingsService>();
             await settings.LoadAsync();
+            await settings.LoadEntitiesAsync();
 
             var state = Services.GetRequiredService<IApplicationStateService>();
-            Log.Information("[APP] Starting HASS.Agent {device}", state.AppSettings.DeviceName);
+            Log.Information("[APP] Starting HASS.Agent {device} — {qa} QA, {cmd} cmds, {sv}+{mv} sensors",
+                state.AppSettings.DeviceName,
+                state.QuickActions.Count, state.Commands.Count,
+                state.SingleValueSensors.Count, state.MultiValueSensors.Count);
 
             // Notify MainWindow that settings are loaded — triggers tray icon + hotkey registration
             WeakReferenceMessenger.Default.Send(new SettingsChangedMessage());

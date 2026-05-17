@@ -57,7 +57,7 @@ public class TrayIconService : IDisposable
     private static extern bool AppendMenu(nint hMenu, uint uFlags, nuint uIDNewItem, string? lpNewItem);
 
     [DllImport("user32.dll")]
-    private static extern bool TrackPopupMenu(nint hMenu, uint uFlags, int x, int y, int nReserved, nint hWnd, nint prcRect);
+    private static extern int TrackPopupMenu(nint hMenu, uint uFlags, int x, int y, int nReserved, nint hWnd, nint prcRect);
 
     [DllImport("user32.dll")]
     private static extern bool DestroyMenu(nint hMenu);
@@ -86,6 +86,7 @@ public class TrayIconService : IDisposable
     private const uint MF_GRAYED = 0x01;
     private const uint TPM_RIGHTBUTTON = 0x02;
     private const uint TPM_BOTTOMALIGN = 0x20;
+    private const uint TPM_RETURNCMD = 0x100;
 
     // Context menu command IDs
     private const nuint CMD_OPEN_SETTINGS = 1;
@@ -164,7 +165,27 @@ public class TrayIconService : IDisposable
             AppendMenu(menu, MF_SEPARATOR, 0, null);
             AppendMenu(menu, MF_STRING, CMD_EXIT, "Exit");
 
-            TrackPopupMenu(menu, TPM_RIGHTBUTTON | TPM_BOTTOMALIGN, pos.x, pos.y, 0, _hwnd, nint.Zero);
+            // TPM_RETURNCMD: TrackPopupMenu returns the selected command ID directly
+            // instead of dispatching WM_COMMAND. Lets us route without handling WM_COMMAND in WndProc.
+            var cmd = (nuint)TrackPopupMenu(
+                menu, TPM_RIGHTBUTTON | TPM_BOTTOMALIGN | TPM_RETURNCMD,
+                pos.x, pos.y, 0, _hwnd, nint.Zero);
+
+            switch (cmd)
+            {
+                case CMD_OPEN_SETTINGS:
+                    OpenSettings();
+                    break;
+                case CMD_QUICK_ACTIONS:
+                    WeakReferenceMessenger.Default.Send(new QuickActionsHotkeyMessage());
+                    break;
+                case CMD_RELOAD:
+                    WeakReferenceMessenger.Default.Send(new SettingsChangedMessage());
+                    break;
+                case CMD_EXIT:
+                    WeakReferenceMessenger.Default.Send(new ExitAppMessage());
+                    break;
+            }
         }
         finally
         {
@@ -198,3 +219,6 @@ public class TrayIconService : IDisposable
 
 // Message sent when the user opens settings from the tray
 public sealed class OpenSettingsMessage { }
+
+// Message sent when the user requests app exit (from tray menu)
+public sealed class ExitAppMessage { }
