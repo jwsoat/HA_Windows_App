@@ -17,3 +17,7 @@ src/HASS.Agent.UI/obj/
 
 src/HASS.Agent.Shared/bin/
 src/HASS.Agent.Shared/obj/
+
+# MSIX packaging output
+src/HASS.Agent.UI/AppPackages/
+src/HASS.Agent.UI/**/AppPackages/

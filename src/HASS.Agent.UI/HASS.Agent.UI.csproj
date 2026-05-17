@@ -10,9 +10,6 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWinUI>true</UseWinUI>
-    <WindowsPackageType>None</WindowsPackageType>
-    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
-    <EnableMsixTooling>false</EnableMsixTooling>
     <Platforms>x64</Platforms>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <PlatformTarget>x64</PlatformTarget>
@@ -23,11 +20,43 @@
     <Description>HASS.Agent — Windows client for Home Assistant (WinUI 3)</Description>
     <Copyright>MIT</Copyright>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <!-- Disable PRI/MRT resource generation and payload deduplication.
-         Required for CLI builds without VS packaging workloads. Re-enable in Phase 6 (MSIX). -->
+
+    <!--
+      Default build mode is unpackaged (self-contained runtime, no MSIX).
+      For MSIX packaging, pass /p:BuildMode=Msix to dotnet build, which sets:
+        WindowsPackageType=MSIX
+        EnableMsixTooling=true
+        AppxGeneratePriEnabled=true (the proper MSBuild PRI generation, not our makepri workaround)
+        GenerateAppxPackageOnBuild=true
+    -->
+    <BuildMode Condition="'$(BuildMode)' == ''">Unpackaged</BuildMode>
+  </PropertyGroup>
+
+  <!-- Unpackaged build (default, sideloaded, dev/CLI workflow) -->
+  <PropertyGroup Condition="'$(BuildMode)' == 'Unpackaged'">
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <EnableMsixTooling>false</EnableMsixTooling>
+    <!-- Disable VS-only PRI/MRT tasks; the Directory.Build.targets fallback generates a minimal
+         resources.pri via makepri.exe so themeresources.xaml can be located at runtime. -->
     <AppxGeneratePriEnabled>false</AppxGeneratePriEnabled>
     <AppxGeneratePrisForPortableLibrariesEnabled>false</AppxGeneratePrisForPortableLibrariesEnabled>
     <IncludeCopyLocalFilesOutputGroup>false</IncludeCopyLocalFilesOutputGroup>
+  </PropertyGroup>
+
+  <!-- MSIX build (Store-distributable, signed package) -->
+  <PropertyGroup Condition="'$(BuildMode)' == 'Msix'">
+    <WindowsPackageType>MSIX</WindowsPackageType>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <GenerateAppxPackageOnBuild>true</GenerateAppxPackageOnBuild>
+    <AppxPackageSigningEnabled Condition="'$(AppxPackageSigningEnabled)' == ''">true</AppxPackageSigningEnabled>
+    <AppxAutoIncrementPackageRevision>false</AppxAutoIncrementPackageRevision>
+    <AppxBundlePlatforms>x64</AppxBundlePlatforms>
+    <AppxBundle>Always</AppxBundle>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <DefaultResourceLanguage>en-US</DefaultResourceLanguage>
+    <PackageArchitecture>x64</PackageArchitecture>
+    <AppInstallerUri Condition="'$(AppInstallerUri)' == ''"></AppInstallerUri>
   </PropertyGroup>
 
   <ItemGroup>
@@ -45,6 +74,22 @@
 
   <ItemGroup>
     <Content Include="Assets\hassagent.ico" />
+  </ItemGroup>
+
+  <!-- MSIX visual assets (still referenced as Content for unpackaged so the splash icon shows up) -->
+  <ItemGroup>
+    <Content Include="Assets\Square44x44Logo.png" />
+    <Content Include="Assets\Square150x150Logo.png" />
+    <Content Include="Assets\Wide310x150Logo.png" />
+    <Content Include="Assets\SplashScreen.png" />
+    <Content Include="Assets\StoreLogo.png" />
+  </ItemGroup>
+
+  <!-- Manifest only matters for MSIX builds, but harmless to declare always -->
+  <ItemGroup Condition="'$(BuildMode)' == 'Msix'">
+    <AppxManifest Include="Package.appxmanifest">
+      <SubType>Designer</SubType>
+    </AppxManifest>
   </ItemGroup>
 
 

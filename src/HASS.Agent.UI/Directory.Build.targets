@@ -1,22 +1,26 @@
 <Project>
   <!--
-    Suppress Windows App SDK packaging targets that require VS workloads not present in CLI-only builds.
-    These are no-ops for non-MSIX (WindowsPackageType=None) development builds.
-    Safe to remove this file when Visual Studio with MSIX packaging tools is installed.
+    Suppress Windows App SDK packaging targets that require VS workloads not present in CLI-only
+    unpackaged builds. These are no-ops for unpackaged (WindowsPackageType=None) builds and
+    intentionally do NOT run in MSIX builds (where the real VS targets do the proper work).
   -->
-  <Target Name="GetMrtPackagingOutputs" Returns="@(PackagingOutputs)" />
-  <Target Name="CopyLocalFilesOutputGroup" Returns="@(CopyLocalFilesOutputGroupOutput)" />
-  <Target Name="_GetDefaultResourceLanguage" />
-  <Target Name="_GetPackageArchitecture" />
+  <Target Name="GetMrtPackagingOutputs" Returns="@(PackagingOutputs)"
+          Condition="'$(WindowsPackageType)' == 'None'" />
+  <Target Name="CopyLocalFilesOutputGroup" Returns="@(CopyLocalFilesOutputGroupOutput)"
+          Condition="'$(WindowsPackageType)' == 'None'" />
+  <Target Name="_GetDefaultResourceLanguage"
+          Condition="'$(WindowsPackageType)' == 'None'" />
+  <Target Name="_GetPackageArchitecture"
+          Condition="'$(WindowsPackageType)' == 'None'" />
 
   <!--
-    Generate the app's resources.pri directly via makepri.exe.
+    Generate the app's resources.pri directly via makepri.exe — UNPACKAGED ONLY.
     Without this, WinUI 3 can't resolve ms-appx:/// URIs at runtime
     (themeresources.xaml fails to load and the app crashes silently in OnLaunched).
-    The VS-supplied MRT MSBuild tasks normally do this, but they're not available in CLI-only builds.
+    For MSIX builds, the SDK's own MRT tasks generate the PRI properly so this target is skipped.
   -->
   <Target Name="GenerateAppPri" AfterTargets="Build"
-          Condition="'$(MSBuildProjectName)' == 'HASS.Agent.UI'">
+          Condition="'$(MSBuildProjectName)' == 'HASS.Agent.UI' And '$(WindowsPackageType)' == 'None'">
     <PropertyGroup>
       <_MakePriExe>$(NuGetPackageRoot)microsoft.windows.sdk.buildtools\10.0.26100.1742\bin\10.0.26100.0\x64\makepri.exe</_MakePriExe>
       <_PriOutDir>$(MSBuildProjectDirectory)\$(OutputPath.TrimEnd('\'))</_PriOutDir>
