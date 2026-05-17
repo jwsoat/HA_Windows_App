@@ -73,9 +73,10 @@ public static class EntityFactory
         IReadOnlyDictionary<string, string> fields, string? id)
     {
         // Stock parameters every sensor has.
-        if (p.Name == "name") return name;
+        if (p.Name is "name" or "entityName") return name;     // 2.2.0 split these — give both the same value
         if (p.Name == "id") return id ?? Guid.NewGuid().ToString();
         if (p.Name == "updateInterval") return interval;
+        if (p.Name == "advancedSettings") return null;
         if (p.Name is "deviceClass" or "icon" or "unitOfMeasurement" or "multiValueSensorName") return null;
         if (p.Name == "useAttributes" && p.ParameterType == typeof(bool)) return false;
 
@@ -86,7 +87,7 @@ public static class EntityFactory
     private static object? MapCommandArg(ParameterInfo p, string name, CommandEntityType entityType,
         IReadOnlyDictionary<string, string> fields, string? id)
     {
-        if (p.Name == "name") return name;
+        if (p.Name is "name" or "entityName") return name;
         if (p.Name == "id") return id ?? Guid.NewGuid().ToString();
         if (p.Name == "entityType") return entityType;
         return ConvertFieldValue(p, fields);

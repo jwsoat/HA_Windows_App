@@ -11,6 +11,10 @@ public static class SensorTypeRegistry
     private static readonly EntityField[] WindowNameField = {
         new() { Key = "windowName", Label = "Window title", Placeholder = "Notepad" }
     };
+    private static readonly EntityField[] ScreenIndexField = {
+        new() { Key = "screenIndex", Label = "Screen index (0 = primary)",
+                Placeholder = "0", Kind = EntityFieldKind.Number, Required = false, DefaultValue = "0" }
+    };
     private static readonly EntityField[] ProcessNameField = {
         new() { Key = "processName", Label = "Process name", Placeholder = "chrome" }
     };
@@ -85,6 +89,8 @@ public static class SensorTypeRegistry
 
         // Parameterized
         Single("NamedWindowSensor",          "Named Window",           "Custom", "Whether a window with the given title is open.", 5, WindowNameField, ns: SingleValueNs),
+        Single("NamedActiveWindowSensor",    "Named Active Window",    "Custom", "Whether the focused window matches a given title.", 5, WindowNameField, ns: SingleValueNs),
+        Single("ScreenshotSensor",           "Screenshot",             "Custom", "Periodically captures and uploads a screenshot.", 15, ScreenIndexField, ns: SingleValueNs),
         Single("ProcessActiveSensor",        "Process Active",         "Custom", "Whether a named process is running.",       5,  ProcessNameField, ns: SingleValueNs),
         Single("WindowStateSensor",          "Window State",           "Custom", "Minimized / maximized / hidden for a process.", 5, ProcessNameField, ns: SingleValueNs),
         Single("ServiceStateSensor",         "Service State",          "Custom", "Running / stopped state of a Windows service.", 10, ServiceNameField, ns: SingleValueNs),

@@ -37,6 +37,14 @@ public static class CommandTypeRegistry
         new() { Key = "volume", Label = "Default volume on press (0–100)",
                 Placeholder = "50", Kind = EntityFieldKind.Number, Required = false, DefaultValue = "50" }
     };
+    private static readonly EntityField[] AppVolumeFields = {
+        new() { Key = "commandConfig", Label = "Process name + volume (e.g. \"chrome:50\")",
+                Placeholder = "chrome:50" }
+    };
+    private static readonly EntityField[] AudioDeviceField = {
+        new() { Key = "audioDevice", Label = "Audio device name (must match Windows exactly)",
+                Placeholder = "Speakers (Realtek)" }
+    };
 
     // ── Namespaces ────────────────────────────────────────────────────────────
 
@@ -58,8 +66,9 @@ public static class CommandTypeRegistry
         Cmd("LogOffCommand",      "Log Off",      "System", "Log the current user off.",         CustomNs),
 
         // Monitor
-        Cmd("MonitorSleepCommand","Monitor Sleep","System", "Turn the monitor off.",             InternalNs),
-        Cmd("MonitorWakeCommand", "Monitor Wake", "System", "Wake the monitor.",                 KeyNs),
+        Cmd("MonitorSleepCommand",          "Monitor Sleep",             "System", "Turn the monitor off.",                                                  InternalNs),
+        Cmd("MonitorSleepPowerPlanCommand", "Monitor Sleep (Power Plan)","System", "Turn the screen off via the power plan (won't put the system to sleep).", InternalNs),
+        Cmd("MonitorWakeCommand",           "Monitor Wake",              "System", "Wake the monitor.",                                                      KeyNs),
 
         // Media
         Cmd("MediaPlayPauseCommand",  "Media Play/Pause",    "Media", "Toggle play/pause.",      KeyNs),
@@ -68,7 +77,10 @@ public static class CommandTypeRegistry
         Cmd("MediaVolumeUpCommand",   "Media Volume Up",     "Media", "Raise system volume.",    KeyNs),
         Cmd("MediaVolumeDownCommand", "Media Volume Down",   "Media", "Lower system volume.",    KeyNs),
         Cmd("MediaMuteCommand",       "Media Mute",          "Media", "Mute system volume.",     KeyNs),
-        Cmd("SetVolumeCommand",       "Set Volume",          "Media", "Set system volume to a value.", InternalNs, SetVolumeField),
+        Cmd("SetVolumeCommand",            "Set Volume",            "Media", "Set system volume to a value.",                       InternalNs, SetVolumeField),
+        Cmd("SetApplicationVolumeCommand", "Set App Volume",        "Media", "Set the volume of a specific application.",          InternalNs, AppVolumeFields),
+        Cmd("SetAudioOutputCommand",       "Set Audio Output",      "Media", "Set default audio output device.",                    InternalNs, AudioDeviceField),
+        Cmd("SetAudioInputCommand",        "Set Audio Input",       "Media", "Set default audio input (microphone) device.",        InternalNs, AudioDeviceField),
 
         // Parameterized
         Cmd("CustomCommand",            "Custom Command",       "Custom",
