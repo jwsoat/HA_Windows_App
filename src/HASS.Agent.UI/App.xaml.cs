@@ -45,6 +45,7 @@ public partial class App : Application
             .AddSingleton<MqttCredentialVault>()
             .AddSingleton<IMqttService, MqttService>()
             .AddSingleton<IHassApiService, HassApiService>()
+            .AddSingleton<IUpdateCheckerService, UpdateCheckerService>()
             .AddSingleton<SensorsWorker>()
             .AddSingleton<CommandsWorker>()
             .AddSingleton<IGlobalHotkeyService, GlobalHotkeyService>()

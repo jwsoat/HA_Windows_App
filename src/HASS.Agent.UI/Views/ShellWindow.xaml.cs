@@ -21,6 +21,7 @@ public sealed partial class ShellWindow : Microsoft.UI.Xaml.Window
 {
     private readonly NavigationService _nav;
     private MicaController? _micaController;
+    private DesktopAcrylicController? _acrylicController;
     private SystemBackdropConfiguration? _backdropConfig;
 
     private static readonly Dictionary<string, Type> PageMap = new()
@@ -73,20 +74,33 @@ public sealed partial class ShellWindow : Microsoft.UI.Xaml.Window
 
     private void SetupMicaBackdrop()
     {
-        if (!MicaController.IsSupported()) return;
+        _backdropConfig = new SystemBackdropConfiguration { IsInputActive = true };
 
-        _backdropConfig = new SystemBackdropConfiguration
+        // Track foreground state so the controller can dim the backdrop when unfocused.
+        Activated += (_, e) =>
         {
-            IsInputActive = true
+            if (_backdropConfig != null)
+                _backdropConfig.IsInputActive =
+                    e.WindowActivationState != Microsoft.UI.Xaml.WindowActivationState.Deactivated;
         };
 
-        _micaController = new MicaController { Kind = MicaKind.Base };
-        _micaController.AddSystemBackdropTarget(
-            this.As<Microsoft.UI.Composition.ICompositionSupportsSystemBackdrop>());
-        _micaController.SetSystemBackdropConfiguration(_backdropConfig);
+        var backdropTarget = this.As<Microsoft.UI.Composition.ICompositionSupportsSystemBackdrop>();
 
-        Activated += (_, e) =>
-            _backdropConfig.IsInputActive =
-                e.WindowActivationState != Microsoft.UI.Xaml.WindowActivationState.Deactivated;
+        // Try Mica (Win11) → Acrylic (Win10 1903+) → no backdrop (very old / unsupported).
+        if (MicaController.IsSupported())
+        {
+            _micaController = new MicaController { Kind = MicaKind.Base };
+            _micaController.AddSystemBackdropTarget(backdropTarget);
+            _micaController.SetSystemBackdropConfiguration(_backdropConfig);
+            return;
+        }
+
+        if (DesktopAcrylicController.IsSupported())
+        {
+            _acrylicController = new DesktopAcrylicController();
+            _acrylicController.AddSystemBackdropTarget(backdropTarget);
+            _acrylicController.SetSystemBackdropConfiguration(_backdropConfig);
+        }
+        // else: WinUI falls back to its default solid theme brush.
     }
 }

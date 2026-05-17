@@ -15,12 +15,14 @@ public sealed partial class DashboardPage : Page
     private readonly IApplicationStateService _state;
     private readonly IMqttService _mqtt;
     private readonly IHassApiService _hassApi;
+    private readonly IUpdateCheckerService _updates;
 
     public DashboardPage()
     {
         _state   = App.Services.GetRequiredService<IApplicationStateService>();
         _mqtt    = App.Services.GetRequiredService<IMqttService>();
         _hassApi = App.Services.GetRequiredService<IHassApiService>();
+        _updates = App.Services.GetRequiredService<IUpdateCheckerService>();
         InitializeComponent();
     }
 
@@ -31,6 +33,23 @@ public sealed partial class DashboardPage : Page
 
         WeakReferenceMessenger.Default.Register<MqttConnectionStateMessage>(
             this, (_, msg) => DispatcherQueue.TryEnqueue(() => UpdateMqttStatus(msg.Value)));
+
+        // Fire-and-forget GitHub release check; populates the InfoBar if a newer version exists.
+        if (_state.AppSettings.CheckForUpdates)
+            _ = CheckForUpdatesAsync();
+    }
+
+    private async Task CheckForUpdatesAsync()
+    {
+        var info = await _updates.CheckForUpdateAsync();
+        if (info == null) return;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            UpdateInfoBar.Title = $"Update available — v{info.LatestVersion}";
+            UpdateInfoBar.Message = $"You're running v{info.CurrentVersion}.";
+            UpdateLink.NavigateUri = new Uri(info.ReleaseUrl);
+            UpdateInfoBar.IsOpen = true;
+        });
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)

@@ -49,7 +49,7 @@
                 Title="Update Available"
                 Severity="Success">
                 <InfoBar.ActionButton>
-                    <HyperlinkButton Content="View Release"/>
+                    <HyperlinkButton x:Name="UpdateLink" Content="View Release"/>
                 </InfoBar.ActionButton>
             </InfoBar>
 

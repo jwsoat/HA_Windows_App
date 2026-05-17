@@ -23,6 +23,9 @@ namespace HASS.Agent.Core.Configuration
         {
             Log.Information("[SETTINGS] Config path: {path}", _state.ConfigPath);
 
+            // Try migrating from a legacy LAB02 install before deciding we're a fresh start.
+            LegacyConfigMigrator.MigrateIfNeeded(_state.ConfigPath);
+
             if (!Directory.Exists(_state.ConfigPath))
             {
                 Directory.CreateDirectory(_state.ConfigPath);
